@@ -1,7 +1,9 @@
 import 'package:esc_printer_test/abstract_class/PrinterServiceAbstract.dart';
 import 'package:flutter/material.dart';
 import 'package:esc_printer_test/services/NetworkPrinterService.dart';
+import 'package:esc_printer_test/services/WebSocketService.dart';
 
+String eventData = 'Waiting for data...';
 void main() {
   runApp(MyApp());
 }
@@ -26,9 +28,15 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    printerService =
-        NetworkPrinterService(printerIp: '192.168.0.100', printerPort: 9100)
-            as PrinterServiceAbstract;
+    WebSocketService().connect(
+      'wss://middleware.trttechnologies.ca/',
+      onData: (data) {
+        // This is where you call setState
+        setState(() {
+          eventData = data;
+        });
+      },
+    );
   }
 
   @override
@@ -38,11 +46,25 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text('ESC/POS Demo'),
       ),
       body: Center(
-        child: ElevatedButton(
-          onPressed: () async {
-            await printerService.generateAndPrintReceipt();
-          },
-          child: Text('Generate and Print Receipt'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () async {
+                await printerService.generateAndPrintReceipt();
+              },
+              child: Text('Generate and Print Receipt'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await printerService.printReceiptJson(eventData);
+              },
+              child: Text('Print Receipt JSON'),
+            ),
+            SizedBox(
+                height: 20), // Provides spacing between the buttons and text
+            Text(eventData), // Display the WebSocket data
+          ],
         ),
       ),
     );

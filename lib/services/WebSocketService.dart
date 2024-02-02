@@ -1,28 +1,35 @@
+import 'package:flutter/material.dart';
+import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WebSocketService {
-  late WebSocketChannel _channel;
-  Function(String)? onData;
-  Function()? onDone;
-  Function(dynamic)? onError;
+  WebSocketChannel? _channel;
+  Function(String)? onDataReceived;
 
-  void connect(String url) {
-    _channel = WebSocketChannel.connect(Uri.parse(url));
+  static final WebSocketService _instance = WebSocketService._internal();
 
-    _channel.stream.listen((data) {
-      if (onData != null) onData!(data);
-    }, onError: (error) {
-      if (onError != null) onError!(error);
+  factory WebSocketService() => _instance;
+
+  WebSocketService._internal();
+
+  void connect(String serverAddress, {Function(String)? onData}) {
+    onDataReceived = onData;
+    _channel = IOWebSocketChannel.connect(Uri.parse(serverAddress));
+
+    _channel!.stream.listen((data) {
+      debugPrint(data); // Logging the data
+      if (onDataReceived != null) {
+        onDataReceived!(
+            data); // Call the provided callback function with new data
+      }
     }, onDone: () {
-      if (onDone != null) onDone!();
+      debugPrint('WebSocket Connection Closed');
+    }, onError: (error) {
+      debugPrint('WebSocket Error: $error');
     });
   }
 
-  void send(String message) {
-    _channel.sink.add(message);
-  }
-
   void close() {
-    _channel.sink.close();
+    _channel?.sink.close();
   }
 }

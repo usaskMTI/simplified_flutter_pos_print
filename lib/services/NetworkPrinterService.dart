@@ -44,9 +44,7 @@ class NetworkPrinterService implements PrinterServiceAbstract {
   }
 
   Future<void> printReceiptJson(String orderJson) async {
-    if (true) {
-      debugPrint('orderJson: $orderJson');
-    }
+    debugPrint('orderJson: $orderJson');
     // final orderData = json.decode(orderJson);
     // final profile = await CapabilityProfile.load();
     // final generator = Generator(PaperSize.mm80, profile);
