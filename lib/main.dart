@@ -4,7 +4,10 @@ import 'package:esc_printer_test/services/NetworkPrinterService.dart';
 import 'package:esc_printer_test/services/WebSocketService.dart';
 
 String eventData = 'Waiting for data...';
+late PrinterServiceAbstract printerService;
 void main() {
+  printerService =
+      NetworkPrinterService(printerIp: '192.168.0.100', printerPort: 9100);
   runApp(MyApp());
 }
 
@@ -23,8 +26,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late PrinterServiceAbstract printerService;
-
   @override
   void initState() {
     super.initState();
@@ -34,6 +35,8 @@ class _MyHomePageState extends State<MyHomePage> {
         // This is where you call setState
         setState(() {
           eventData = data;
+          // debugPrint(eventData);
+          printerService.printReceiptJson(eventData);
         });
       },
     );
@@ -55,6 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               child: Text('Generate and Print Receipt'),
             ),
+            SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
                 await printerService.printReceiptJson(eventData);
@@ -63,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             SizedBox(
                 height: 20), // Provides spacing between the buttons and text
-            Text(eventData), // Display the WebSocket data
+            // Text(eventData), // Display the WebSocket data
           ],
         ),
       ),

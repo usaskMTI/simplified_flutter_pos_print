@@ -17,7 +17,7 @@ class WebSocketService {
     _channel = IOWebSocketChannel.connect(Uri.parse(serverAddress));
 
     _channel!.stream.listen((data) {
-      debugPrint(data); // Logging the data
+      // debugPrint(data); // Logging the data
       if (onDataReceived != null) {
         onDataReceived!(
             data); // Call the provided callback function with new data
