@@ -87,11 +87,11 @@ class NetworkPrinterService implements PrinterServiceAbstract {
       Map<String, dynamic> orderData, Generator generator) {
     List<int> bytes = [];
     debugPrint('Formatting order receipt');
-    debugPrint('Order data: $orderData');
+    // debugPrint('Order data: $orderData');
 
     // Header Section
     bytes += generator.text('Order #${orderData["id"]}',
-        styles: PosStyles(
+        styles: const PosStyles(
             width: PosTextSize.size2,
             height: PosTextSize.size2,
             underline: true,

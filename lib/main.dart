@@ -35,7 +35,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // This is where you call setState
         setState(() {
           eventData = data;
-          // debugPrint(eventData);
+          debugPrint(eventData);
           printerService.printReceiptJson(eventData);
         });
       },
