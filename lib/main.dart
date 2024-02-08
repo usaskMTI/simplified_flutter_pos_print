@@ -2,73 +2,62 @@ import 'package:esc_printer_test/abstract_class/PrinterServiceAbstract.dart';
 import 'package:flutter/material.dart';
 import 'package:esc_printer_test/services/NetworkPrinterService.dart';
 import 'package:esc_printer_test/services/WebSocketService.dart';
+import 'pages/HomePage.dart';
+import 'pages/Settings.dart';
 
-String eventData = 'Waiting for data...';
-late PrinterServiceAbstract printerService;
 void main() {
-  printerService =
+  final printerService =
       NetworkPrinterService(printerIp: '192.168.0.100', printerPort: 9100);
-  runApp(MyApp());
+  runApp(MyApp(printerService: printerService));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  final PrinterServiceAbstract printerService;
+
+  MyApp({Key? key, required this.printerService}) : super(key: key);
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: MyHomePage(),
-    );
-  }
+  _MyAppState createState() => _MyAppState();
 }
 
-class MyHomePage extends StatefulWidget {
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
+class _MyAppState extends State<MyApp> {
+  int _selectedIndex = 0;
 
-class _MyHomePageState extends State<MyHomePage> {
+  List<Widget> _widgetOptions = [];
+
   @override
   void initState() {
     super.initState();
-    WebSocketService().connect(
-      'wss://middleware.trttechnologies.ca/',
-      onData: (data) {
-        // This is where you call setState
-        setState(() {
-          eventData = data;
-          debugPrint(eventData);
-          printerService.printReceiptJson(eventData);
-        });
-      },
-    );
+    _widgetOptions = [
+      HomePage(printerService: widget.printerService),
+      SettingsPage(),
+    ];
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('TRT Teechnologies - ESC/POS Printer Test'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () async {
-                await printerService.generateAndPrintReceipt();
-              },
-              child: Text('Generate and Print Receipt'),
+    return MaterialApp(
+      home: Scaffold(
+        body: _widgetOptions.elementAt(_selectedIndex),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                await printerService.printReceiptJson(eventData);
-              },
-              child: Text('Print Receipt JSON'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: 'Settings',
             ),
-            SizedBox(
-                height: 20), // Provides spacing between the buttons and text
-            // Text(eventData), // Display the WebSocket data
           ],
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
         ),
       ),
     );
