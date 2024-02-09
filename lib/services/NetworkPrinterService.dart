@@ -146,8 +146,11 @@ class NetworkPrinterService implements PrinterServiceAbstract {
         // Safely use 'taxLine' assuming it's not null
         bytes += generator.text('${taxLine["label"]}',
             styles: PosStyles(bold: true));
-        bytes += generator.text(
-            '${orderData["currency_symbol"]}${taxLine["tax_total"]}',
+        // Ensure the tax total is formatted with two decimal places
+        var taxTotal =
+            double.tryParse('${taxLine["tax_total"]}')?.toStringAsFixed(2) ??
+                '0.00';
+        bytes += generator.text('${orderData["currency_symbol"]}$taxTotal',
             styles: PosStyles(align: PosAlign.right, bold: true));
         bytes += generator.hr();
       }

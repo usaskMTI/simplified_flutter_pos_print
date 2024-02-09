@@ -1,13 +1,24 @@
+import 'dart:io';
 import 'package:esc_printer_test/abstract_class/PrinterServiceAbstract.dart';
 import 'package:flutter/material.dart';
 import 'package:esc_printer_test/services/NetworkPrinterService.dart';
 import 'package:esc_printer_test/services/WebSocketService.dart';
 import 'pages/HomePage.dart';
 import 'pages/Settings.dart';
+import 'package:window_size/window_size.dart';
 
 void main() {
   final printerService =
       NetworkPrinterService(printerIp: '192.168.0.100', printerPort: 9100);
+
+  // Set the window size and title
+  WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    setWindowTitle('TRT Technologies - Orders Management');
+    setWindowMaxSize(const Size(720, 1280));
+    setWindowMinSize(const Size(480, 640));
+  }
+
   runApp(MyApp(printerService: printerService));
 }
 
