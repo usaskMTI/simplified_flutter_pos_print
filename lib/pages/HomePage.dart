@@ -1,12 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:esc_printer_test/abstract_class/PrinterServiceAbstract.dart';
-import 'package:esc_printer_test/main_old.dart';
 import 'package:flutter/material.dart';
-import 'package:esc_printer_test/services/NetworkPrinterService.dart';
+import 'package:esc_printer_test/abstract_class/PrinterServiceAbstract.dart';
 import 'package:esc_printer_test/services/WebSocketService.dart';
 import 'package:esc_printer_test/class/Order.dart';
-
-List<Order> orders = []; // List to store unique orders
 
 class HomePage extends StatefulWidget {
   final PrinterServiceAbstract printerService;
@@ -18,29 +15,37 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final StreamController<Order> _orderStreamController =
+      StreamController.broadcast();
+  final List<Order> _printedOrders = [];
+
   @override
   void initState() {
     super.initState();
     WebSocketService().connect(
       'wss://middleware.trttechnologies.ca/',
       onData: (data) {
-        setState(() {
-          debugPrint('Received data: $data');
-          widget.printerService.printReceiptJson(data);
-          handleIncomingData(data);
-        });
+        final Order newOrder = Order.fromJson(json.decode(data));
+        _orderStreamController.add(newOrder);
       },
     );
+
+    _orderStreamController.stream.listen((Order order) {
+      _printAndArchiveOrder(order);
+    });
   }
 
-  void handleIncomingData(String jsonData) {
-    final Map<String, dynamic> orderJson = json.decode(jsonData);
-    final Order newOrder = Order.fromJson(orderJson);
+  void _printAndArchiveOrder(Order order) async {
+    await widget.printerService.printReceiptJson(order.fulljson);
+    setState(() {
+      _printedOrders.add(order);
+    });
+  }
 
-    // Check for duplicates before adding to the list
-    if (!orders.any((order) => order.id == newOrder.id)) {
-      orders.add(newOrder);
-    }
+  @override
+  void dispose() {
+    _orderStreamController.close();
+    super.dispose();
   }
 
   @override
@@ -49,30 +54,17 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('TRT Technologies - Orders Management'),
       ),
-      body: orders.isEmpty
-          ? Center(child: Text('No orders yet'))
+      body: _printedOrders.isEmpty
+          ? Center(child: Text('No printed orders yet'))
           : ListView.builder(
-              itemCount: orders.length,
+              itemCount: _printedOrders.length,
               itemBuilder: (context, index) {
-                final order = orders[index];
+                final order = _printedOrders[index];
                 return Card(
                   child: ListTile(
-                    title: Text('Order ID: ${order.id}'),
+                    title: Text('Printed Order ID: ${order.id}'),
                     subtitle:
                         Text('Status: ${order.status} - Total: ${order.total}'),
-                    // Optionally, add a trailing widget, like an icon button for more actions
-                    trailing: IconButton(
-                      icon: Icon(Icons.print),
-                      onPressed: () {
-                        // Implement your print function here
-                        debugPrint('Printing order: ${order.id}');
-                        // widget.printerService.printReceiptJson(order.fulljson);
-                      },
-                    ),
-                    onTap: () {
-                      // Implement what happens when you tap on an order
-                      debugPrint('Tapped on order: ${order.id}');
-                    },
                   ),
                 );
               },
