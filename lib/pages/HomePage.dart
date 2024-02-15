@@ -18,7 +18,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final StreamController<List<Order>> _orderStreamController =
       StreamController<List<Order>>.broadcast();
-  List<Order> _currentOrders = [];
+  final List<Order> _currentOrders = [];
   final List<Order> _printedOrders = [];
 
   @override
@@ -28,13 +28,11 @@ class _HomePageState extends State<HomePage> {
       'wss://middleware.trttechnologies.ca/',
       onData: (data) {
         final Order newOrder = Order.fromJson(json.decode(data));
-        _currentOrders
-            .add(newOrder); // Add the new order to the list of current orders
-        _orderStreamController.add(List.from(
-            _currentOrders)); // Update the stream with a copy of the current orders list
+        _currentOrders.add(newOrder);
+        _orderStreamController.add(List.from(_currentOrders));
 
         // Delay printing for testing
-        Future.delayed(Duration(seconds: 5), () {
+        Future.delayed(const Duration(seconds: 5), () {
           _printAndArchiveOrder(newOrder);
         });
       },
@@ -42,15 +40,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _printAndArchiveOrder(Order order) async {
-    await widget.printerService
-        .printReceiptJson(order.fulljson); // Simulate printing
+    await widget.printerService.printReceiptJson(order.fulljson);
 
     setState(() {
-      _currentOrders
-          .remove(order); // Remove the order from current (unprinted) orders
-      _printedOrders.add(order); // Add to printed orders list
-      _orderStreamController.add(
-          _currentOrders); // Update the stream to reflect the removed order
+      _currentOrders.remove(order);
+      order.status = 'Printed';
+      _printedOrders.add(order);
+      _orderStreamController.add(_currentOrders);
     });
   }
 
@@ -64,7 +60,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('TRT Technologies - Orders Management'),
+        title: const Text('TRT Technologies - Orders Management'),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,7 +70,7 @@ class _HomePageState extends State<HomePage> {
             child: Center(
               child: Text(
                 'Incoming Orders',
-                style: Theme.of(context).textTheme.headline6,
+                style: Theme.of(context).textTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),
             ),
@@ -90,17 +86,29 @@ class _HomePageState extends State<HomePage> {
                     itemCount: orders.length,
                     itemBuilder: (context, index) {
                       final order = orders[index];
-                      return Card(
-                        child: ListTile(
-                          title: Text('Incoming Order ID: ${order.id}'),
-                          subtitle: Text(
-                              'Status: ${order.status} - Total: ${order.total}'),
+                      return Container(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 10.0, vertical: 5.0),
+                        child: Card(
+                          child: ListTile(
+                            title: Text('Incoming Order ID: ${order.id}'),
+                            subtitle: Text(
+                                'Status: ${order.status} - Total: ${order.total}'),
+                          ),
                         ),
                       );
                     },
                   );
                 } else {
-                  return Center(child: Text('Waiting for orders...'));
+                  return Container(
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 10.0, vertical: 5.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey, width: 1.0),
+                      borderRadius: BorderRadius.circular(5.0),
+                    ),
+                    child: const Center(child: Text('Waiting for orders...')),
+                  );
                 }
               },
             ),
@@ -110,24 +118,36 @@ class _HomePageState extends State<HomePage> {
             child: Center(
               child: Text(
                 'Printed Orders',
-                style: Theme.of(context).textTheme.headline6,
+                style: Theme.of(context).textTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),
             ),
           ),
           Expanded(
-            flex: 2, // Adjust flex to change the space distribution
+            flex: 2,
             child: _printedOrders.isEmpty
-                ? Center(child: Text('No printed orders yet'))
+                ? Container(
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 10.0, vertical: 5.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey, width: 1.0),
+                      borderRadius: BorderRadius.circular(5.0),
+                    ),
+                    child: const Center(child: Text('Waiting for orders...')),
+                  )
                 : ListView.builder(
                     itemCount: _printedOrders.length,
                     itemBuilder: (context, index) {
                       final order = _printedOrders[index];
-                      return Card(
-                        child: ListTile(
-                          title: Text('Printed Order ID: ${order.id}'),
-                          subtitle: Text(
-                              'Status: ${order.status} - Total: ${order.total}'),
+                      return Container(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 10.0, vertical: 5.0),
+                        child: Card(
+                          child: ListTile(
+                            title: Text('Printed Order ID: ${order.id}'),
+                            subtitle: Text(
+                                'Status: ${order.status} - Total: ${order.total}'),
+                          ),
                         ),
                       );
                     },

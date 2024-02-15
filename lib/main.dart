@@ -2,10 +2,11 @@ import 'dart:io';
 import 'package:esc_printer_test/abstract_class/PrinterServiceAbstract.dart';
 import 'package:flutter/material.dart';
 import 'package:esc_printer_test/services/NetworkPrinterService.dart';
-import 'package:esc_printer_test/services/WebSocketService.dart';
 import 'pages/HomePage.dart';
 import 'pages/Settings.dart';
 import 'package:window_size/window_size.dart';
+import 'package:provider/provider.dart';
+import 'class/OrdersProvider.dart';
 
 void main() {
   final printerService =
@@ -53,22 +54,25 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: _widgetOptions.elementAt(_selectedIndex),
-        bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: 'Settings',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
+    return ChangeNotifierProvider<OrdersProvider>(
+      create: (_) => OrdersProvider(),
+      child: MaterialApp(
+        home: Scaffold(
+          body: _widgetOptions.elementAt(_selectedIndex),
+          bottomNavigationBar: BottomNavigationBar(
+            items: const <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings),
+                label: 'Settings',
+              ),
+            ],
+            currentIndex: _selectedIndex,
+            onTap: _onItemTapped,
+          ),
         ),
       ),
     );

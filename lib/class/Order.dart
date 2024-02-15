@@ -2,7 +2,7 @@ import 'dart:convert';
 
 class Order {
   final String id;
-  final String status;
+  String status;
   final String total;
   final String fulljson;
 
