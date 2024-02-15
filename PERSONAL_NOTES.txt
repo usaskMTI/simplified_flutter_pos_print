@@ -1,0 +1,2 @@
+Unnatural time difference between printing and moving to list. [HomePage.dart]
+StreamController closing when changing tabs

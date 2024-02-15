@@ -11,8 +11,16 @@ class NetworkPrinterService implements PrinterServiceAbstract {
 
   NetworkPrinterService({required this.printerIp, required this.printerPort});
 
+  void setPrinterIp(String ip) {
+    this.printerIp = ip;
+  }
+
+  void setPrinterPort(int port) {
+    this.printerPort = port;
+  }
+
   @override
-  Future<void> generateAndPrintReceipt() async {
+  Future<void> testPrint() async {
     final profile = await CapabilityProfile.load();
     final generator = Generator(PaperSize.mm80, profile);
     List<int> bytes = [];

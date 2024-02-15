@@ -6,6 +6,11 @@ import 'package:esc_printer_test/abstract_class/PrinterServiceAbstract.dart';
 import 'package:esc_printer_test/services/WebSocketService.dart';
 import 'package:esc_printer_test/class/Order.dart';
 
+final StreamController<List<Order>> _orderStreamController =
+    StreamController<List<Order>>.broadcast();
+final List<Order> _currentOrders = [];
+final List<Order> _printedOrders = [];
+
 class HomePage extends StatefulWidget {
   final PrinterServiceAbstract printerService;
 
@@ -16,38 +21,48 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final StreamController<List<Order>> _orderStreamController =
-      StreamController<List<Order>>.broadcast();
-  final List<Order> _currentOrders = [];
-  final List<Order> _printedOrders = [];
-
   @override
   void initState() {
     super.initState();
     WebSocketService().connect(
       'wss://middleware.trttechnologies.ca/',
       onData: (data) {
+        print('Received data: $data');
         final Order newOrder = Order.fromJson(json.decode(data));
         _currentOrders.add(newOrder);
         _orderStreamController.add(List.from(_currentOrders));
 
         // Delay printing for testing
-        Future.delayed(const Duration(seconds: 5), () {
-          _printAndArchiveOrder(newOrder);
+        Future.delayed(const Duration(seconds: 0), () {
+          if (mounted) {
+            // Check if the widget is still mounted
+            _printAndArchiveOrder(newOrder);
+          }
         });
       },
     );
   }
 
   void _printAndArchiveOrder(Order order) async {
-    await widget.printerService.printReceiptJson(order.fulljson);
+    try {
+      await widget.printerService.printReceiptJson(order.fulljson);
+      Future.delayed(Duration(seconds: 1), () {
+        // Wait for the printing to complete
 
-    setState(() {
-      _currentOrders.remove(order);
-      order.status = 'Printed';
-      _printedOrders.add(order);
-      _orderStreamController.add(_currentOrders);
-    });
+        // Printing succeeded, proceed to update the order status and lists
+        if (mounted) {
+          setState(() {
+            _currentOrders.remove(order);
+            order.status = 'Printed';
+            _printedOrders.add(order);
+            _orderStreamController.add(List.from(_currentOrders));
+          });
+        }
+      });
+    } catch (e) {
+      // Handle printing error, maybe log or show a message to the user
+      print('Error printing order ${order.id}: $e');
+    }
   }
 
   @override

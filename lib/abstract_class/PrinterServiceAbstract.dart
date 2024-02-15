@@ -1,4 +1,4 @@
 abstract class PrinterServiceAbstract {
-  Future<void> generateAndPrintReceipt();
+  Future<void> testPrint();
   Future<void> printReceiptJson(String orderJson);
 }
